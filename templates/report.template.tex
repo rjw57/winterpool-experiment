@@ -1,0 +1,15 @@
+\documentclass[a4paper]{article}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+\begin{document}
+  \BLOCK{for file in files}
+    \section*{
+      \href{\VAR{file.webViewLink}}{
+        \VAR{file.appProperties.ucasPersonalId}: \VAR{file.appProperties.extractedName}
+      }
+    }
+  \BLOCK{endfor}
+\end{document}
+
+% vim:sw=2:sts=2:ts=2:et

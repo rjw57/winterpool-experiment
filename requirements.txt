@@ -1,4 +1,7 @@
-textract
+docopt
 google-api-python-client
+jinja2
+latex
 oauth2client
 pyyaml
+textract

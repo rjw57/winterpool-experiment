@@ -1,0 +1,14 @@
+---
+# Example job specification for winter pool processing. The folder ids can be
+# cut and paste from URLs in your web-browser and can be in different team
+# drives.
+incoming_folder_id: "id for incoming folder"
+processed_folder_id: "id for processed folder"
+
+# Optionally, the path to the JSON-formatted client secrets downloaded from
+# Google.
+client_secrets_path: "/client_secrets.json"
+
+# Optionally, the path to a directory to use as a credentials store can be
+# specified.
+store_path: "/store"
