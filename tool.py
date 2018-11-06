@@ -31,11 +31,12 @@ Options:
 import csv
 import logging
 import os
+import random
 import re
 import secrets
+import sys
 import tempfile
 import time
-import sys
 
 import docopt
 from googleapiclient.discovery import build
@@ -127,7 +128,7 @@ def run_pipeline(service, spec):
     generate_summary(service, processed, processed_folder_id)
 
 
-def list_all_files(service, **kwargs):
+def list_all_files(service, shuffled=True, **kwargs):
     files = []
     pageToken = None
 
@@ -138,6 +139,9 @@ def list_all_files(service, **kwargs):
         pageToken = results.get('nextPageToken', '')
         if pageToken == '':
             break
+
+    if shuffled:
+        random.shuffle(files)
 
     return files
 
