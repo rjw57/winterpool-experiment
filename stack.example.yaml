@@ -41,12 +41,13 @@ services:
       "--spec=/jobspec.yaml",
       "--auth-bind=0.0.0.0",
       "--loop",
-      "--loop-sleep=3600"
+      "--loop-sleep=600"
     ]
     deploy:
       labels:
         - "traefik.port=8080"
         - "traefik.frontend.rule=Host:pool.swarm.usvc.gcloud.automation.uis.cam.ac.uk"
+      replicas: 2
     configs:
       - source: jobspec
         target: /jobspec.yaml
