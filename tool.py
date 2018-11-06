@@ -41,7 +41,7 @@ import time
 import docopt
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
-from httplib2 import Http
+import httplib2shim
 import jinja2.loaders
 import latex
 import latex.jinja2
@@ -87,13 +87,15 @@ def main():
     store = file.Storage(os.path.join(store_dir, 'token.json'))
     creds = store.get()
 
+    http = httplib2shim.Http()
+
     client_secrets_path = spec.get(
         'client_secrets_path', './client_secrets.json')
     LOG.info('Using %s for client secrets', client_secrets_path)
     if not creds or creds.invalid:
         flow = client.flow_from_clientsecrets(client_secrets_path, SCOPES)
-        creds = run_flow(flow, store, opts=opts)
-    service = build('drive', 'v3', http=creds.authorize(Http()))
+        creds = run_flow(flow, store, opts=opts, http=http)
+    service = build('drive', 'v3', http=creds.authorize(http))
 
     loop_sleep = int(opts['--loop-sleep'])
     while True:
@@ -497,7 +499,7 @@ def generate_summary(service, processed, processed_folder_id):
                     fileId=item['id'], **api_params).execute()
 
 
-def run_flow(flow, storage, opts):
+def run_flow(flow, storage, opts, http=None):
     """Based on
     https://oauth2client.readthedocs.io/en/latest/source/oauth2client.tools.html#oauth2client.tools.run_flow
     """  # noqa: E501
@@ -522,7 +524,7 @@ def run_flow(flow, storage, opts):
         sys.exit('"code" not in query parameters of redirect')
 
     try:
-        credential = flow.step2_exchange(code)
+        credential = flow.step2_exchange(code, http=http)
     except client.FlowExchangeError as e:
         sys.exit(f'Authentication has failed: {e}')
 

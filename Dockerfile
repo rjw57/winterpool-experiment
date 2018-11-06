@@ -5,10 +5,10 @@ ADD requirements.txt /usr/src/app
 RUN apk --no-cache update \
     && apk --no-cache add swig texlive gcc g++ musl-dev libxml2-dev \
         libxslt-dev libstdc++ libjpeg-turbo-dev pulseaudio-dev poppler-utils \
-        tesseract-ocr \
+        tesseract-ocr libressl-dev \
     && pip install -r requirements.txt \
     && apk del gcc g++ musl-dev libxml2-dev libxslt-dev libstdc++ \
-        libjpeg-turbo-dev pulseaudio-dev
+        libjpeg-turbo-dev pulseaudio-dev libressl-dev
 
 ADD tool.py /usr/src/app
 ADD templates/ /usr/src/app/templates

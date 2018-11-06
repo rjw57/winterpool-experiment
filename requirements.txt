@@ -5,3 +5,8 @@ latex
 oauth2client
 pyyaml
 textract
+
+# httplib2shim - required to avoid connection pooling iddues
+# The ordering here is important according to the httplib2shim docs
+urllib3[secure]
+httplib2shim
