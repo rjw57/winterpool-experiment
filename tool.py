@@ -116,21 +116,30 @@ def run_pipeline(service, spec):
     def fetch_processed_files():
         return fetch_processed_files_from_folder(service, processed_folder_id)
 
-    LOG.info('Copying new incoming files')
-    copy_new_incoming_files(
-        service, fetch_incoming_files(), fetch_processed_files(),
-        processed_folder_id)
+    while True:
+        did_things = []
 
-    LOG.info('OCR-ing any non-OCR-ed files')
-    ocr_files(service, fetch_processed_files(), processed_folder_id)
+        LOG.info('Copying new incoming files')
+        did_things.append(copy_new_incoming_files(
+            service, fetch_incoming_files(), fetch_processed_files(),
+            processed_folder_id))
 
-    LOG.info('Extracting applicant info from OCR-ed text')
-    extract_ucas_personal_id(service, fetch_processed_files())
+        LOG.info('OCR-ing any non-OCR-ed files')
+        did_things.append(ocr_files(
+            service, fetch_processed_files(), processed_folder_id))
 
-    LOG.info('Generating index and summary documents')
-    processed = fetch_processed_files()
-    generate_index(service, processed, processed_folder_id)
-    generate_summary(service, processed, processed_folder_id)
+        LOG.info('Extracting applicant info from OCR-ed text')
+        did_things.append(extract_ucas_personal_id(
+            service, fetch_processed_files()))
+
+        LOG.info('Generating index and summary documents')
+        processed = fetch_processed_files()
+        generate_index(service, processed, processed_folder_id)
+        generate_summary(service, processed, processed_folder_id)
+
+        # We're done as soon as we had nothing to do
+        if not any(did_things):
+            break
 
 
 def list_all_files(service, shuffled=True, **kwargs):
@@ -210,6 +219,12 @@ def copy_new_incoming_files(service, incoming, processed, processed_folder_id):
                 },
             ).execute()
 
+        # After a successful processing of a file, return to let other pipeline
+        # stages progress
+        return True
+
+    return False
+
 
 def ocr_files(service, processed, processed_folder_id):
     for item in processed:
@@ -267,6 +282,12 @@ def ocr_files(service, processed, processed_folder_id):
                     },
                 }
             ).execute()
+
+        # After a successful processing of a file, return to let other pipeline
+        # stages progress
+        return True
+
+    return False
 
 
 def extract_ucas_personal_id(service, processed):
@@ -374,6 +395,12 @@ def extract_ucas_personal_id(service, processed):
                     }
                 ).execute()
 
+        # After a successful processing of a file, return to let other pipeline
+        # stages progress
+        return True
+
+    return False
+
 
 def generate_index(service, processed, processed_folder_id):
     required_properties = ['ucasPersonalId', 'extractedName']
@@ -390,6 +417,10 @@ def generate_index(service, processed, processed_folder_id):
             .split(' ')[-1]
         )
     )
+
+    # Don't try to generate report if no files
+    if len(fully_processed_files) == 0:
+        return
 
     # Do we have an index already?
     index_files = [
@@ -450,6 +481,10 @@ def generate_summary(service, processed, processed_folder_id):
             .split(' ')[-1]
         )
     )
+
+    # Don't try to generate summary if no files
+    if len(fully_processed_files) == 0:
+        return
 
     # Do we have an summary already?
     summary_files = [
