@@ -230,8 +230,8 @@ def ocr_files(service, processed, processed_folder_id):
 
             text_path = os.path.join(tmp_dir, 'file.txt')
             text = textract.process(download_path, method='tesseract')
-            with open(text_path, 'wb') as fobj:
-                fobj.write(text)
+            with open(text_path, 'w') as fobj:
+                fobj.write(text.decode('utf8', errors='replace'))
 
             LOG.info("Uploading text")
             media = MediaFileUpload(text_path, mimetype='text/plain')
