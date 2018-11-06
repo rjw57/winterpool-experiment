@@ -67,6 +67,9 @@ LOG = logging.getLogger(__name__)
 
 
 def main():
+    # Seed the random number generator with OS randomness
+    random.seed(os.urandom(32), version=2)
+
     opts = docopt.docopt(__doc__)
     with open(opts['--spec']) as fobj:
         spec = yaml.load(fobj)
