@@ -132,6 +132,8 @@ def run_pipeline(service, spec):
         did_things.append(extract_ucas_personal_id(
             service, fetch_processed_files()))
 
+        LOG.info('Did things: %r', did_things)
+
         if any(did_things):
             LOG.info('Generating index and summary documents')
             processed = fetch_processed_files()
@@ -204,24 +206,26 @@ def copy_new_incoming_files(service, incoming, processed, processed_folder_id):
     ]
 
     for item in incoming:
-        if item['id'] not in processed_file_sources:
-            name = secrets.token_urlsafe() + '.pdf'
-            LOG.info('Copying %s to %s', item['name'], name)
-            service.files().copy(
-                fileId=item['id'],
-                supportsTeamDrives=True,
-                body={
-                    'name': name,
-                    'copyRequiresWriterPermission': True,
-                    'appProperties': {
-                        'copiedFrom': item['id'],
-                    },
-                    'parents': [processed_folder_id],
-                },
-            ).execute()
+        if item['id'] in processed_file_sources:
+            continue
 
-        # After a successful processing of a file, return to let other pipeline
-        # stages progress
+        name = secrets.token_urlsafe() + '.pdf'
+        LOG.info('Copying %s to %s', item['name'], name)
+        service.files().copy(
+            fileId=item['id'],
+            supportsTeamDrives=True,
+            body={
+                'name': name,
+                'copyRequiresWriterPermission': True,
+                'appProperties': {
+                    'copiedFrom': item['id'],
+                },
+                'parents': [processed_folder_id],
+            },
+        ).execute()
+
+        # After a successful processing of a file, return to let other
+        # pipeline stages progress
         return True
 
     return False
