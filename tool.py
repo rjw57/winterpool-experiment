@@ -132,10 +132,11 @@ def run_pipeline(service, spec):
         did_things.append(extract_ucas_personal_id(
             service, fetch_processed_files()))
 
-        LOG.info('Generating index and summary documents')
-        processed = fetch_processed_files()
-        generate_index(service, processed, processed_folder_id)
-        generate_summary(service, processed, processed_folder_id)
+        if any(did_things):
+            LOG.info('Generating index and summary documents')
+            processed = fetch_processed_files()
+            generate_index(service, processed, processed_folder_id)
+            generate_summary(service, processed, processed_folder_id)
 
         # We're done as soon as we had nothing to do
         if not any(did_things):
