@@ -7,8 +7,4 @@ processed_folder_id: "id for processed folder"
 
 # Optionally, the path to the JSON-formatted client secrets downloaded from
 # Google.
-client_secrets_path: "/client_secrets.json"
-
-# Optionally, the path to a directory to use as a credentials store can be
-# specified.
-store_path: "/store"
+credentials_path: "/credentials.json"

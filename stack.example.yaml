@@ -2,17 +2,13 @@
 # Example stack for deployment on our local usvc stack. Will spin up the tool in
 # loop mode.
 #
-# On first deployment, the authorisation flow must be completed proxying the
-# HTTP server locally using something like mitmproxy:
+# The Google service account JSON encoded credentials must be present in a
+# docker secret called "winter-pool-credentials" and the jobspec is in a config
+# called "winter-pool-jobspec-example" The jobspec should include the following:
 #
-#   mitmproxy -p 8080 --mode reverse:https://pool.swarm.usvc.gcloud.automation.uis.cam.ac.uk/
-#
-# The Google client id and secret JSON must be present in a docker secret called
-# "winter-pool-client-secrets" and the jobspec is in a config called
-# "winter-pool-example-jobspec" The jobspec should include the following:
-#
-#   client_secrets_path: "/client_secrets.json"
-#   store_path: "/store"
+#   incoming_folder_id: "some folder id"
+#   processed_folder_id: "some folder id"
+#   credentials_path: "/credentials.json"
 #
 version: '3.5'
 
@@ -23,38 +19,29 @@ networks:
 
 configs:
   jobspec:
-    name: winter-pool-example-jobspec
+    name: winter-pool-jobspec-exampl
     external: true
 
 secrets:
-  client-secrets:
+  credentials:
     external: true
-    name: winter-pool-client-secrets
-
-volumes:
-  token-store:
+    name: winter-pool-credentials
 
 services:
   tool:
     image: rjw57/winterpool-experiment
     command: [
       "--spec=/jobspec.yaml",
-      "--auth-bind=0.0.0.0",
       "--loop",
       "--loop-sleep=600"
     ]
     deploy:
-      labels:
-        - "traefik.port=8080"
-        - "traefik.frontend.rule=Host:pool.swarm.usvc.gcloud.automation.uis.cam.ac.uk"
       replicas: 2
     configs:
       - source: jobspec
         target: /jobspec.yaml
     secrets:
-      - source: client-secrets
-        target: /client_secrets.json
-    volumes:
-      - token-store:/store
+      - source: credentials
+        target: /credentials.json
     networks:
       - traefik

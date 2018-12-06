@@ -9,10 +9,11 @@ folder.
 
 ## Preparing
 
-Create/obtain a client id and secret an OAuth2 client as described in the
-[Google quickstart
-guide](https://developers.google.com/drive/api/v3/quickstart/python). Download
-this to a file named ``client_secrets.json``.
+Create a service account and download JSON-formatted credentials for it. Add the
+email address associated with that service account as owner on the Tem drives
+containing the incoming and output folders.
+
+The JSON credentials should be present in a file called ``credentials.json``.
 
 Create a ``jobspec.yaml`` file in the current directory based on the [example
 template](jobspec.example.yaml). The incoming and processed folder ids may be
@@ -34,19 +35,9 @@ Run the script via:
 ```bash
 $ docker run --rm -it \
     -v $PWD/jobspec.yaml:/jobspec.yaml:ro \
-    -v $PWD/client_secrets.json:/client_secrets.json:ro \
-    -v pool-credentials-store:/store \
-    -p 8080:8080 \
-    rjw57/winterpool-experiment --auth-bind=0.0.0.0 --spec=/jobspec.yaml
+    -v $PWD/credentials.json:/credentials.json:ro \
+    rjw57/winterpool-experiment --spec=/jobspec.yaml
 ```
-
-This creates a persistent docker volume named "pool-credentials-store" for the
-authorisation tokens and launches the tool. On first run the tool will ask you
-to open a web-browser, log in and paste an authorisation token.
-
-**AT THIS POINT THE TOOL ACTS AS YOUR USER.** The tool cannot do anything you do
-not have permissions to do yourself, including uploading/accessing files in the
-drive.
 
 ## Deploying
 

@@ -4,8 +4,7 @@ Build winter pool documents
 
 Usage:
     tool.py (-h | --help)
-    tool.py [--quiet] [--auth-bind=ADDRESS] [--auth-hostname=HOSTNAME]
-        [--auth-port=PORT] [--loop] [--loop-sleep=NUMBER] [--spec=FILE]
+    tool.py [--quiet] [--loop] [--loop-sleep=NUMBER] [--spec=FILE]
 
 Options:
 
@@ -20,13 +19,6 @@ Options:
     --loop-sleep=NUMBER         If looping, number of seconds to sleep between
                                 iterations [default: 600]
 
-    --auth-bind=ADDRESS         Host/ip to bind web server to.
-                                [default: localhost]
-    --auth-hostname=HOSTNAME    Hostname to use when running a local web
-                                server. [default: localhost]
-    --auth-port=PORT            Port to bind local web server to.
-                                [default: 8080]
-
 """
 import csv
 import logging
@@ -34,7 +26,6 @@ import os
 import random
 import re
 import secrets
-import sys
 import tempfile
 import time
 
@@ -45,7 +36,7 @@ import httplib2shim
 import jinja2.loaders
 import latex
 import latex.jinja2
-from oauth2client import file, client, tools
+from oauth2client import service_account
 import textract
 import yaml
 
@@ -78,23 +69,19 @@ def main():
         level=logging.WARN if opts['--quiet'] else logging.INFO
     )
 
-    store_dir = spec.get(
-        'store_path', os.path.join(os.path.dirname(__file__), 'store'))
-    if not os.path.exists(store_dir):
-        os.makedirs(store_dir)
-
-    LOG.info('Using %s for token storage directory.', store_dir)
-    store = file.Storage(os.path.join(store_dir, 'token.json'))
-    creds = store.get()
-
     http = httplib2shim.Http()
 
-    client_secrets_path = spec.get(
-        'client_secrets_path', './client_secrets.json')
-    LOG.info('Using %s for client secrets', client_secrets_path)
+    credentials_path = spec.get('credentials_path', './credentials.json')
+    LOG.info('Using %s for client secrets', credentials_path)
+    creds = (
+        service_account.ServiceAccountCredentials.from_json_keyfile_name(
+            credentials_path, SCOPES
+        )
+    )
+
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets(client_secrets_path, SCOPES)
-        creds = run_flow(flow, store, opts=opts, http=http)
+        LOG.error('Credentials are invalid')
+
     service = build('drive', 'v3', http=creds.authorize(http))
 
     loop_sleep = int(opts['--loop-sleep'])
@@ -537,41 +524,6 @@ def generate_summary(service, processed, processed_folder_id):
             for item in summary_files:
                 service.files().update(
                     fileId=item['id'], **api_params).execute()
-
-
-def run_flow(flow, storage, opts, http=None):
-    """Based on
-    https://oauth2client.readthedocs.io/en/latest/source/oauth2client.tools.html#oauth2client.tools.run_flow
-    """  # noqa: E501
-    bind, port = opts['--auth-bind'], int(opts['--auth-port'])
-    LOG.info('Starting authorisation server on %s:%s', bind, port)
-    server = tools.ClientRedirectServer(
-        (bind, port), tools.ClientRedirectHandler)
-
-    hostname = opts['--auth-hostname']
-    flow.redirect_uri = f'http://{hostname}:{port}'
-
-    authorize_url = flow.step1_get_authorize_url()
-    LOG.info('Open the following link in a browser:')
-    LOG.info('%s', authorize_url)
-
-    server.handle_request()
-    if 'error' in server.query_params:
-        sys.exit('Authentication request was rejected.')
-    if 'code' in server.query_params:
-        code = server.query_params['code']
-    else:
-        sys.exit('"code" not in query parameters of redirect')
-
-    try:
-        credential = flow.step2_exchange(code, http=http)
-    except client.FlowExchangeError as e:
-        sys.exit(f'Authentication has failed: {e}')
-
-    storage.put(credential)
-    credential.set_store(storage)
-
-    return credential
 
 
 if __name__ == '__main__':
