@@ -3,6 +3,10 @@
 \usepackage{hyperref}
 
 \begin{document}
+  Applicant count: \VAR{files | length}.
+
+  The headings below are links. They lead to the individual applicant files.
+
   \BLOCK{for file in files}
     \section*{
       \href{\VAR{file.webViewLink}}{
