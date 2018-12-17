@@ -49,12 +49,3 @@ traffic manager and that one can serve traffic for the host
 A docker config must be present which holds the jobspec and a docker secret must
 be present with the client secrets. Authorisation tokens are stored in a
 persistent volume. See the stack for details.
-
-When first deployed, the tool will be waiting for authorisation from Google.
-This is a little complex as Google only allows localhost as a redirect URI.
-Hence one needs to reverse proxy the authorisation server. This can be done via
-[mitmproxy](https://mitmproxy.org/):
-
-```bash
-$ mitmproxy -p 8080 --mode reverse:https://pool.swarm.usvc.gcloud.automation.uis.cam.ac.uk/
-```
